@@ -1,8 +1,19 @@
+import uuid
+import os
+
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 from core.validators import validate_phone_number
+
+
+def product_image_file_path(instance, filename):
+    """Generate file path for new product image."""
+    ext = os.path.splitext(filename)[1]
+    filename = f'{uuid.uuid4()}{ext}'
+
+    return os.path.join('uploads', 'product', filename)
 
 
 class User(AbstractUser):
@@ -52,6 +63,7 @@ class Product(models.Model):
     province = models.CharField(max_length=64, choices=PROVINCES_CHOICES)
     phone_number = models.CharField(max_length=9,
                                     validators=[validate_phone_number])
+    image = models.ImageField(null=True, upload_to=product_image_file_path)
 
     class Meta:
         ordering = ('name',)

@@ -30,3 +30,13 @@ class ProductListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         exclude = ('author', 'description', 'phone_number')
+
+
+class ProductImageSerializer(serializers.ModelSerializer):
+    """Serializer for uploading images to products."""
+
+    class Meta:
+        model = Product
+        fields = ['id', 'image']
+        read_only_fields = ['id']
+        extra_kwargs = {'image': {'required': 'True'}}

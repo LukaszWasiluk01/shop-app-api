@@ -1,4 +1,8 @@
 from decimal import Decimal
+import tempfile
+import os
+
+from PIL import Image
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -21,6 +25,11 @@ def detail_url(product_id):
     return reverse('store:products-detail', args=[product_id])
 
 
+def image_upload_url(product_id):
+    """Create and return an image upload URL."""
+    return reverse('store:products-upload-image', args=[product_id])
+
+
 def create_user(**params):
     """Create and return a new user."""
     return USER_MODEL.objects.create_user(**params)
@@ -37,8 +46,12 @@ def create_product(category, user, **params):
     }
     defaults.update(params)
 
-    recipe = Product.objects.create(category=category, author=user, **defaults)
-    return recipe
+    product = Product.objects.create(
+        category=category,
+        author=user,
+        **defaults)
+
+    return product
 
 
 def create_category(name):
@@ -46,7 +59,7 @@ def create_category(name):
     return Category.objects.create(name=name)
 
 
-class PublicRecipeAPITests(TestCase):
+class PublicProductAPITests(TestCase):
     """Test unauthenticated API requests."""
 
     def setUp(self):
@@ -319,3 +332,44 @@ class PrivateUserApiTests(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
         self.assertTrue(Product.objects.filter(author=user).exists())
+
+
+class ImageUploadTests(TestCase):
+    """Tests for the image upload API."""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user = get_user_model().objects.create_user(
+            'user123@example.com',
+            'StrongPassword123',
+        )
+        self.client.force_authenticate(self.user)
+
+        self.category = create_category('electronics')
+        self.product = create_product(self.category, self.user)
+
+    def tearDown(self):
+        self.product.image.delete()
+
+    def test_upload_image(self):
+        """Test uploading an image to a product."""
+        url = image_upload_url(self.product.id)
+        with tempfile.NamedTemporaryFile(suffix='.jpg') as image_file:
+            img = Image.new('RGB', (10, 10))
+            img.save(image_file, format='JPEG')
+            image_file.seek(0)
+            payload = {'image': image_file}
+            res = self.client.post(url, payload, format='multipart')
+
+        self.product.refresh_from_db()
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn('image', res.data)
+        self.assertTrue(os.path.exists(self.product.image.path))
+
+    def test_upload_image_bad_request(self):
+        """Test uploading an invalid image."""
+        url = image_upload_url(self.product.id)
+        payload = {'image': 'notanimage'}
+        res = self.client.post(url, payload, format='multipart')
+
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
