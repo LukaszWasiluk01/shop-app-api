@@ -1,17 +1,24 @@
 from core.models import Category, Product
 from core.permissions import IsAuthor
-from rest_framework import generics, viewsets
+from rest_framework import generics, viewsets, filters
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from django_filters.rest_framework import DjangoFilterBackend
 
 from store.serializers import (CategorySerializer, ProductListSerializer,
                                ProductSerializer)
+from store.filters import ProductFilter
 
 
 class ProductViewSet(viewsets.ModelViewSet):
     """View for manage product object."""
     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthor, ]
     authentication_classes = (TokenAuthentication, )
+    filter_backends = [filters.SearchFilter, DjangoFilterBackend,
+                       filters.OrderingFilter]
+    filterset_class = ProductFilter
+    search_fields = ['name', 'description']
+    ordering_fields = ['name', 'price', 'created', 'province']
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)

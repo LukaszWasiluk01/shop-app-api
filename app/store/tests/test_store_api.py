@@ -3,11 +3,13 @@ from decimal import Decimal
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Product, Category
-from store.serializers import ProductSerializer, CategorySerializer
+from core.models import Category, Product
+from store.serializers import (CategorySerializer, ProductListSerializer,
+                               ProductSerializer)
 
 PRODUCT_URL = reverse('store:products-list')
 CATEGORY_URL = reverse('store:category-list')
@@ -73,10 +75,10 @@ class PublicRecipeAPITests(TestCase):
         res = self.client.get(PRODUCT_URL)
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(2, len(res.data))
-        self.assertNotIn('author', res.data[0])
-        self.assertNotIn('desc', res.data[0])
-        self.assertNotIn('phone_number', res.data[0])
+        self.assertEqual(2, len(res.data['results']))
+        self.assertNotIn('author', res.data['results'][0])
+        self.assertNotIn('desc', res.data['results'][0])
+        self.assertNotIn('phone_number', res.data['results'][0])
 
     def test_get_detail_product(self):
         """Test getting details of product."""
@@ -120,6 +122,88 @@ class PublicRecipeAPITests(TestCase):
         serializer2 = CategorySerializer(self.category2)
         self.assertIn(serializer1.data, res.data)
         self.assertIn(serializer2.data, res.data)
+
+    def test_product_list_pagination(self):
+        """Test product list pagination."""
+        for _ in range(9):
+            create_product(self.category1, self.user1)
+
+        res = self.client.get(PRODUCT_URL)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(8, len(res.data['results']))
+
+        params = {
+            'page': 2
+        }
+        res = self.client.get(PRODUCT_URL, params)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(1, len(res.data['results']))
+
+    def test_product_list_search_filtering(self):
+        """Test product list search filtering"""
+        p1 = create_product(self.category1, self.user1, name='A test')
+        create_product(self.category2, self.user2, name='B sample')
+        p3 = create_product(
+            self.category2,
+            self.user2,
+            description='Test sample')
+
+        params = {
+            'search': 'test'
+        }
+
+        res = self.client.get(PRODUCT_URL, params)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+        s1 = ProductListSerializer(p1)
+        s3 = ProductListSerializer(p3)
+        self.assertEqual(2, len(res.data['results']))
+        self.assertIn(s1.data, res.data['results'])
+        self.assertIn(s3.data, res.data['results'])
+
+    def test_product_list_order_filtering(self):
+        """Test product list order filtering"""
+        p1 = create_product(self.category1, self.user1, price='1.25')
+        p2 = create_product(self.category2, self.user2, price='2.25')
+        p3 = create_product(self.category2, self.user2, price='3.25')
+
+        params = {
+            'ordering': '-price'
+        }
+
+        res = self.client.get(PRODUCT_URL, params)
+
+        s1 = ProductListSerializer(p1)
+        s2 = ProductListSerializer(p2)
+        s3 = ProductListSerializer(p3)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(s3.data, res.data['results'][0])
+        self.assertEqual(s2.data, res.data['results'][1])
+        self.assertEqual(s1.data, res.data['results'][2])
+
+    def test_product_list_detail_data_filtering(self):
+        """Test product list detail data filtering"""
+        create_product(self.category1, self.user1, price='1.25')
+        p2 = create_product(self.category1, self.user2, price='2.25')
+        create_product(self.category2, self.user2, price='3.25')
+
+        params = {
+            'price__gt': 2,
+            'price__lt': 4,
+            'category__name': self.category1.name
+        }
+
+        res = self.client.get(PRODUCT_URL, params)
+
+        s2 = ProductListSerializer(p2)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(1, len(res.data['results']))
+        self.assertEqual(s2.data, res.data['results'][0])
 
 
 class PrivateUserApiTests(TestCase):
