@@ -17,7 +17,7 @@ services:
              python manage.py runserver 0.0.0.0:8000"
     environment:
       - DEBUG=1
-      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY: -localdefaultsecretkeyifnoenvfile}
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-localdefaultsecretkeyifnoenvfile}
       - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS}
       - DB_HOST=db
       - DB_NAME=${DB_NAME:-shopdb}
