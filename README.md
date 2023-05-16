@@ -5,7 +5,7 @@
 - [Docker](https://docs.docker.com/docker-for-mac/install/)
 
 # Local Development
-
+Create .env file based on .env.sample.
 Start the dev server for local development:
 ```bash
 docker-compose up
