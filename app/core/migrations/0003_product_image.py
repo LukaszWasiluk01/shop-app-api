@@ -5,15 +5,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0002_category_product'),
+        ("core", "0002_category_product"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='product',
-            name='image',
+            model_name="product",
+            name="image",
             field=models.ImageField(null=True, upload_to=core.models.product_image_file_path),
         ),
     ]

@@ -21,16 +21,16 @@ from django.views.generic.base import RedirectView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 urlpatterns = [
-    path('', RedirectView.as_view(url='/api/docs'), name='go-to-api-docs'),
-    path('admin/', admin.site.urls),
-    path('api/schema/', SpectacularAPIView.as_view(), name='api-schema'),
+    path("", RedirectView.as_view(url="/api/docs"), name="go-to-api-docs"),
+    path("admin/", admin.site.urls),
+    path("api/schema/", SpectacularAPIView.as_view(), name="api-schema"),
     path(
-        'api/docs/',
-        SpectacularSwaggerView.as_view(url_name='api-schema'),
-        name='api-docs',
+        "api/docs/",
+        SpectacularSwaggerView.as_view(url_name="api-schema"),
+        name="api-docs",
     ),
-    path('api/users/', include('users.urls')),
-    path('api/store/', include('store.urls')),
+    path("api/users/", include("users.urls")),
+    path("api/store/", include("store.urls")),
 ]
 
 if settings.DEBUG:

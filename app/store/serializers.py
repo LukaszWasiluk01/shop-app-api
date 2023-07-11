@@ -1,6 +1,6 @@
-from rest_framework import serializers
-from core.models import Product, Category
+from core.models import Category, Product
 from django.contrib.auth import get_user_model
+from rest_framework import serializers
 
 UserModel = get_user_model()
 
@@ -8,7 +8,7 @@ UserModel = get_user_model()
 class UserProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserModel
-        fields = ('id', 'username', 'date_joined', 'last_login')
+        fields = ("id", "username", "date_joined", "last_login")
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -22,14 +22,13 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = '__all__'
+        fields = "__all__"
 
 
 class ProductListSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Product
-        exclude = ('author', 'description', 'phone_number')
+        exclude = ("author", "description", "phone_number")
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
@@ -37,6 +36,6 @@ class ProductImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'image']
-        read_only_fields = ['id']
-        extra_kwargs = {'image': {'required': 'True'}}
+        fields = ["id", "image"]
+        read_only_fields = ["id"]
+        extra_kwargs = {"image": {"required": "True"}}

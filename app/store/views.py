@@ -1,27 +1,27 @@
+from core.models import Category, Product
+from core.permissions import IsAuthor
 from django_filters.rest_framework import DjangoFilterBackend
-
 from rest_framework import filters, generics, status, viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
-
-from core.models import Category, Product
-from core.permissions import IsAuthor
 from store.filters import ProductFilter
-from store.serializers import (CategorySerializer, ProductListSerializer,
-                               ProductSerializer, ProductImageSerializer)
+from store.serializers import CategorySerializer, ProductImageSerializer, ProductListSerializer, ProductSerializer
 
 
 class ProductViewSet(viewsets.ModelViewSet):
     """View for manage product object."""
-    permission_classes = [IsAuthenticatedOrReadOnly, IsAuthor, ]
-    authentication_classes = (TokenAuthentication, )
-    filter_backends = [filters.SearchFilter, DjangoFilterBackend,
-                       filters.OrderingFilter]
+
+    permission_classes = [
+        IsAuthenticatedOrReadOnly,
+        IsAuthor,
+    ]
+    authentication_classes = (TokenAuthentication,)
+    filter_backends = [filters.SearchFilter, DjangoFilterBackend, filters.OrderingFilter]
     filterset_class = ProductFilter
-    search_fields = ['name', 'description']
-    ordering_fields = ['name', 'price', 'created', 'province']
+    search_fields = ["name", "description"]
+    ordering_fields = ["name", "price", "created", "province"]
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -31,14 +31,14 @@ class ProductViewSet(viewsets.ModelViewSet):
         return queryset
 
     def get_serializer_class(self):
-        if self.action == 'list':
+        if self.action == "list":
             return ProductListSerializer
-        elif self.action == 'upload_image':
+        elif self.action == "upload_image":
             return ProductImageSerializer
         else:
             return ProductSerializer
 
-    @action(methods=['POST'], detail=True, url_path='upload-image')
+    @action(methods=["POST"], detail=True, url_path="upload-image")
     def upload_image(self, request, pk=None):
         """Upload an image to product."""
         product = self.get_object()
@@ -53,6 +53,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 
 class CategoryListAPI(generics.ListAPIView):
     """View for listing all categories."""
+
     model = Category
     serializer_class = CategorySerializer
     queryset = Category.objects.all()

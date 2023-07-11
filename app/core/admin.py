@@ -1,17 +1,10 @@
+from core.models import Category, Product, User
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from core.models import User, Product, Category
-
 
 class UserAdmin(UserAdmin):
-    add_fieldsets = ((
-        None,
-        {
-            'classes': ('wide',),
-            'fields': ('username', 'email', 'password1', 'password2')
-        }),
-        )
+    add_fieldsets = ((None, {"classes": ("wide",), "fields": ("username", "email", "password1", "password2")}),)
 
 
 admin.site.register(User, UserAdmin)
