@@ -49,9 +49,10 @@ INSTALLED_APPS = [
     "django_filters",
     "drf_spectacular",
     "corsheaders",
-    "djoser",
+    "dj_rest_auth",
     # Project apps
     "core",
+    "users",
 ]
 
 CORS_ALLOWED_ORIGINS = []
@@ -61,6 +62,8 @@ CORS_ALLOWED_ORIGINS.extend(
         os.environ.get("CORS_ALLOWED_ORIGINS", "").split(","),
     )
 )
+
+CORS_ALLOW_CREDENTIALS = True
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
@@ -156,14 +159,17 @@ AUTH_USER_MODEL = "core.User"
 
 
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework_simplejwt.authentication.JWTAuthentication",),
+    "DEFAULT_AUTHENTICATION_CLASSES": ("dj_rest_auth.jwt_auth.JWTCookieAuthentication",),
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 8,
 }
 
-SIMPLE_JWT = {
-    "AUTH_HEADER_TYPES": ("JWT",),
+REST_AUTH = {
+    "USER_DETAILS_SERIALIZER": "users.serializers.UserSerializer",
+    "JWT_AUTH_COOKIE": "access",
+    "JWT_AUTH_REFRESH_COOKIE": "refresh",
+    "USE_JWT": True,
 }
 
 SPECTACULAR_SETTINGS = {
