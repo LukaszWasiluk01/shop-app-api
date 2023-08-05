@@ -2,7 +2,6 @@ from core.models import Category, Product
 from core.permissions import IsAuthor
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics, status, viewsets
-from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
@@ -17,7 +16,6 @@ class ProductViewSet(viewsets.ModelViewSet):
         IsAuthenticatedOrReadOnly,
         IsAuthor,
     ]
-    authentication_classes = (TokenAuthentication,)
     filter_backends = [filters.SearchFilter, DjangoFilterBackend, filters.OrderingFilter]
     filterset_class = ProductFilter
     search_fields = ["name", "description"]
