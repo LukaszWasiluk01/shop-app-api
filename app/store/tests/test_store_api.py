@@ -12,6 +12,7 @@ from rest_framework.test import APIClient
 from store.serializers import CategorySerializer, ProductListSerializer, ProductSerializer
 
 PRODUCT_URL = reverse("store:products-list")
+MY_PRODUCTS_URL = reverse("store:products-my-products")
 CATEGORY_URL = reverse("store:category-list")
 USER_MODEL = get_user_model()
 
@@ -307,6 +308,22 @@ class PrivateUserApiTests(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
         self.assertTrue(Product.objects.filter(author=user).exists())
+
+    def test_my_product_listing_owned_products(self):
+        """Test receiving list of only owned products."""
+        user = create_user(
+            email="testUser4321@example.com",
+            password="testPass4321",
+            username="TestUser4321",
+        )
+        create_product(self.category1, user)
+        create_product(self.category2, self.user)
+
+        res = self.client.get(MY_PRODUCTS_URL)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(1, len(res.data["results"]))
+        self.assertEqual(self.category2.name, res.data["results"][0]["category"])
 
 
 class ImageUploadTests(TestCase):

@@ -3,7 +3,7 @@ from core.permissions import IsAuthor
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from store.filters import ProductFilter
 from store.serializers import CategorySerializer, ProductImageSerializer, ProductListSerializer, ProductSerializer
@@ -25,11 +25,14 @@ class ProductViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user)
 
     def get_queryset(self):
-        queryset = Product.objects.all()
+        if self.action == "list_my_products":
+            queryset = Product.objects.filter(author=self.request.user)
+        else:
+            queryset = Product.objects.all()
         return queryset
 
     def get_serializer_class(self):
-        if self.action == "list":
+        if self.action == "list" or self.action == "list_my_products":
             return ProductListSerializer
         elif self.action == "upload_image":
             return ProductImageSerializer
@@ -47,6 +50,17 @@ class ProductViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(
+        methods=["GET"],
+        detail=False,
+        url_path="my-products",
+        url_name="my-products",
+        permission_classes=[IsAuthenticated],
+    )
+    def list_my_products(self, request):
+        """Get list of owned products."""
+        return self.list(request)
 
 
 class CategoryListAPI(generics.ListAPIView):
