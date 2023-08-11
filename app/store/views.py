@@ -1,6 +1,7 @@
 from core.models import Category, Product
 from core.permissions import IsAuthor
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import extend_schema
 from rest_framework import filters, generics, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
@@ -25,7 +26,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user)
 
     def get_queryset(self):
-        if self.action == "list_my_products":
+        if self.action == "list_my_products" and not self.request.user.is_anonymous:
             queryset = Product.objects.filter(author=self.request.user)
         else:
             queryset = Product.objects.all()
@@ -51,6 +52,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @extend_schema(responses=ProductListSerializer(many=True))
     @action(
         methods=["GET"],
         detail=False,
